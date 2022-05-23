@@ -3,7 +3,7 @@ project(online_judge)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(SRC_FILE 1163.cpp)
+set(SRC_FILE 1203.cpp)
 
 
 add_executable(online-judge ${SRC_FILE})

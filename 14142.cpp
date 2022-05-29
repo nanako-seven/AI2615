@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <vector>
 #include <deque>
-#include <utility>
 
 using namespace std;
 
@@ -57,32 +56,43 @@ struct T {
 
 const int SIZE = 1000000;
 
-// Tarjan算法的实现参考了 https://zhuanlan.zhihu.com/p/101923309
+// Tarjan算法的实现参考了 https://zhuanlan.zhihu.com/p/101923309 的思路
 class Tarjan {
 private:
     int size;
     vector<int> head;
-    vector<int> ver;
-    vector<int> nxt;
-    vector<int> dfn;
-    vector<int> low;
-    int tot = 1;
-    int num = 0;
+    vector<int> node;
+    vector<int> next;
+    vector<int> mark1;
+    vector<int> mark2;
+    int max_node = 1;
+    int mark = 0;
     deque<bool> bridge;
 
-    void tarjan_(int x, int in_edge) {
-        dfn[x] = low[x] = ++num;
-        for (int i = head[x]; i; i = nxt[i]) {
-            int y = ver[i];
-            if (!dfn[y]) {
-                tarjan_(y, i);
-                low[x] = min(low[x], low[y]);
-                if (low[y] > dfn[x]) {
-                    bridge[i] = bridge[i ^ 1] = true;
+    static int another_node(int i) {
+        return i ^ 1;
+    }
+
+    void tarjan_(int u, int e_in) {
+        ++mark;
+        mark1[u] = mark;
+        mark2[u] = mark;
+        for (int i = head[u]; i; i = next[i]) {
+            int v = node[i];
+            if (!mark1[v]) {
+                tarjan_(v, i);
+                if (mark2[v] < mark2[u]) {
+                    mark2[u] = mark2[v];
+                }
+                if (mark2[v] > mark1[u]) {
+                    bridge[i] = true;
+                    bridge[another_node(i)] = true;
                 }
             }
-            else if (i != (in_edge ^ 1)) {
-                low[x] = min(low[x], dfn[y]);
+            if (i != another_node(e_in)) {
+                if (mark2[v] < mark2[u]) {
+                    mark2[u] = mark2[v];
+                }
             }
         }
     }
@@ -94,30 +104,30 @@ private:
         }
     }
 public:
-//    explicit Tarjan(int size_) : head(size_ + 10, 0), ver(size_ * 2 + 10, 0),
-//                                 nxt(size_ * 2 + 10, 0), dfn(size_ + 10, 0), low(size_ + 10, 0),
+//    explicit Tarjan(int size_) : head(size_ + 10, 0), node(size_ * 2 + 10, 0),
+//                                 next(size_ * 2 + 10, 0), mark1(size_ + 10, 0), mark2(size_ + 10, 0),
 //                                 bridge(size_ * 2 + 10, false), size(size_) {}
-    explicit Tarjan(int size_) : head(SIZE, 0), ver(SIZE, 0),
-                                 nxt(SIZE, 0), dfn(SIZE, 0), low(SIZE, 0),
+    explicit Tarjan(int size_) : head(SIZE, 0), node(SIZE, 0),
+                                 next(SIZE, 0), mark1(SIZE, 0), mark2(SIZE, 0),
                                  bridge(SIZE, false), size(size_) {}
     void add(int x, int y) {
-        ver[++tot] = y;
-        nxt[tot] = head[x];
-        head[x] = tot;
+        node[++max_node] = y;
+        next[max_node] = head[x];
+        head[x] = max_node;
     }
 
     // weights1: 电缆；weights2: 无线
     long long tarjan(const vector<vector<T>>& weights1, const vector<vector<T>>& weights2) {
         for (int i = 1; i <= size; i++) {
-            if (!dfn[i]) {
+            if (!mark1[i]) {
                 tarjan_(i, 0);
             }
         }
         long long s = 0;
-        for (int i = 2; i < tot; i += 2) {
+        for (int i = 2; i < max_node; i += 2) {
             if (bridge[i]) {
-                int a = ver[i];
-                int b = ver[i ^ 1];
+                int a = node[i];
+                int b = node[i ^ 1];
                 int m, n;
                 if (a < b) {
                     m = a;

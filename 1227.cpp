@@ -41,15 +41,15 @@ void fft(Complex a[], int n, int b, const int c[]) {
         }
     }
     for (int i = 1; i < n; i *= 2) {
-        Complex wn(cos(PI / i), b * sin(PI / i));
+        Complex omega_n(cos(PI / i), b * sin(PI / i));
         for (int j = 0; j < n; j += i * 2) {
-            Complex w(1, 0);
+            Complex omega(1, 0);
             for (int k = 0; k < i; ++k) {
-                Complex x = a[j + k];
-                Complex y = w * a[j + k + i];
-                a[j + k] = x + y;
-                a[j + k + i] = x - y;
-                w = w * wn;
+                Complex s = a[j + k];
+                Complex t = omega * a[j + k + i];
+                a[j + k] = s + t;
+                a[j + k + i] = s - t;
+                omega = omega * omega_n;
             }
         }
     }
